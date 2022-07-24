@@ -13,11 +13,8 @@ RUN curl -L https://sourceforge.net/projects/bowtie-bio/files/bowtie2/2.4.4/bowt
 RUN apt-get update -y &&\
     apt-get install -y autoconf samtools
 
-
-# You can use local data to construct your workflow image.  Here we copy a
-# pre-indexed reference to a path that our workflow can reference.
-COPY data /root/reference
-ENV BOWTIE2_INDEXES="reference"
+RUN curl -L http://opengene.org/fastp/fastp -o fastp &&\
+    chmod a+x fastp
 
 # STOP HERE:
 # The following lines are needed to ensure your build environement works
