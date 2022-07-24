@@ -2,7 +2,7 @@ import subprocess
 from pathlib import Path
 from typing import List, Union
 
-from latch import large_task, small_task, workflow
+from latch import cached_large_task, small_task, workflow
 from latch.types import LatchDir, LatchFile
 
 from .docs import UNHOST_DOCS
@@ -45,7 +45,7 @@ def fastp(
     return LatchDir(str(output_dir), f"latch:///unhost_{sample_name}")
 
 
-@large_task
+@cached_large_task("0.1.0")
 def build_bowtie_index(
     host_genome: LatchFile, sample_name: str, host_name: str
 ) -> LatchDir:
