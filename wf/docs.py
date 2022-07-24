@@ -21,6 +21,14 @@ UNHOST_DOCS.parameters = {
         display_name="Read 2",
         description="Paired-end read 2 file.",
     ),
+    "host_genome": LatchParameter(
+        display_name="Host Genome",
+        description="FASTA file of the host genome",
+    ),
+    "host_name": LatchParameter(
+        display_name="Host name",
+        description="Name of the host",
+    ),
     "sample_name": LatchParameter(
         display_name="Sample name",
         description="Sample name (will define output file names)",
