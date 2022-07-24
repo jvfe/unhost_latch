@@ -81,7 +81,7 @@ def fastp(
 
     subprocess.run(_fastp_cmd)
 
-    return file_glob(f"{sample_name}.*", "latch:///fastp_outputs/")
+    return file_glob(f"{sample_name}*", "latch:///fastp_outputs/")
 
 
 @workflow(UNHOST_DOCS)
