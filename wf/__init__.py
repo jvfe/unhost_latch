@@ -45,7 +45,7 @@ def fastp(
 
     subprocess.run(_fastp_cmd)
 
-    return LatchDir(str(output_dir), f"latch:///unhost_{sample_name}")
+    return LatchDir(str(output_dir), f"latch:///unhost_{sample_name}_trimmed")
 
 
 @cached_large_task(CACHE_VERSION)
@@ -70,7 +70,7 @@ def build_bowtie_index(
     return LatchDir(str(output_dir), f"latch:///unhost_{sample_name}_host_idx")
 
 
-#@cached_large_task(CACHE_VERSION)
+# @cached_large_task(CACHE_VERSION)
 @large_task
 def map_to_host(
     host_idx: LatchDir,
@@ -109,14 +109,31 @@ def unhost(
     host_genome: LatchFile,
     host_name: str = "host",
     sample_name: str = "unhost_sample",
-) -> List[Union[LatchFile, LatchDir]]:
+) -> LatchDir:
     """A Workflow for fastq preprocessing and host read removal
 
     UnHost
     ---
 
-    A fastq preprocessing and host read removal workflow
-    for short-read metagenomics data.
+    A FastQ preprocessing and host read removal workflow
+    for short-read metagenomics data. It's comprised of:
+        - [fastp](https://github.com/OpenGene/fastp) for read trimming, adapter removal
+        and other preprocessing.
+        - [bowtie2](https://github.com/BenLangmead/bowtie2) for creating an index from the host's
+        reference genome and extracting unaligned reads
+        from an alignment to said genome.
+
+    ---
+    ## References
+
+    Shifu Chen, Yanqing Zhou, Yaru Chen, Jia Gu;
+    fastp: an ultra-fast all-in-one FASTQ preprocessor,
+    Bioinformatics, Volume 34, Issue 17, 1 September 2018,
+    Pages i884–i890, https://doi.org/10.1093/bioinformatics/bty560
+
+    Langmead B, Wilks C., Antonescu V., Charles R. Scaling read
+    aligners to hundreds of threads on general-purpose processors.
+    Bioinformatics. bty648.
     """
 
     trimmed_data = fastp(read1=read1, read2=read2, sample_name=sample_name)
@@ -131,4 +148,4 @@ def unhost(
         host_name=host_name,
     )
 
-    return [unaligned]
+    return unaligned
