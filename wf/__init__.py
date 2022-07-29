@@ -3,6 +3,7 @@ from pathlib import Path
 from typing import List, Union
 
 from latch import large_task, small_task, workflow
+from latch.resources.launch_plan import LaunchPlan
 from latch.resources.tasks import cached_large_task
 from latch.types import LatchDir, LatchFile
 
@@ -57,10 +58,12 @@ def build_bowtie_index(
     output_dir = Path(output_dir_name).resolve()
     output_dir.mkdir(parents=True, exist_ok=True)
 
+    host_name_clean = host_name.replace(" ", "_").lower()
+
     _bt_idx_cmd = [
         "bowtie2/bowtie2-build",
         host_genome.local_path,
-        f"{str(output_dir)}/{host_name}",
+        f"{str(output_dir)}/{host_name_clean}",
         "--threads",
         "31",
     ]
@@ -82,11 +85,12 @@ def map_to_host(
     output_dir_name = f"{sample_name}_bt_unaligned"
     output_dir = Path(output_dir_name).resolve()
     output_dir.mkdir(parents=True, exist_ok=True)
+    host_name_clean = host_name.replace(" ", "_").lower()
 
     _bt_cmd = [
         "bowtie2/bowtie2",
         "-x",
-        f"{host_idx.local_path}/{host_name}",
+        f"{host_idx.local_path}/{host_name_clean}",
         "-1",
         f"{read_dir.local_path}/{sample_name}_1.trim.fastq.gz",
         "-2",
@@ -149,3 +153,16 @@ def unhost(
     )
 
     return unaligned
+
+
+LaunchPlan(
+    unhost,
+    "Test Microbiome",
+    {
+        "read1": LatchFile("latch:///Crohn/SRR579292_1.fastq"),
+        "read2": LatchFile("latch:///Crohn/SRR579292_2.fastq"),
+        "host_genome": LatchFile("latch:///ref_genome/Homo_sapiens.fa.gz"),
+        "host_name": "homo_sapiens",
+        "sample_name": "example_microbiome",
+    },
+)
