@@ -121,11 +121,13 @@ def unhost(
 
     A FastQ preprocessing and host read removal workflow
     for short-read metagenomics data. It's comprised of:
-        - [fastp](https://github.com/OpenGene/fastp) for read trimming, adapter removal
-        and other preprocessing.
-        - [bowtie2](https://github.com/BenLangmead/bowtie2) for creating an index from the host's
-        reference genome and extracting unaligned reads
-        from an alignment to said genome.
+
+    - [fastp](https://github.com/OpenGene/fastp) for read trimming, adapter removal
+    and other preprocessing.
+
+    - [bowtie2](https://github.com/BenLangmead/bowtie2) for creating an index from the host's
+    reference genome and extracting unaligned reads
+    from an alignment to said genome.
 
     ---
     ## References
