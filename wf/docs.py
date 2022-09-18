@@ -33,4 +33,8 @@ UNHOST_DOCS.parameters = {
         display_name="Sample name",
         description="Sample name (will define output file names)",
     ),
+    "contaminants": LatchParameter(
+        display_name="Contaminants",
+        description="FASTA file with contaminant sequences to be removed with bbduk",
+    ),
 }

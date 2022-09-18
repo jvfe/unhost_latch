@@ -1,8 +1,8 @@
 import subprocess
 from pathlib import Path
-from typing import List, Union
+from typing import List, Optional, Union
 
-from latch import large_task, small_task, workflow
+from latch import large_task, small_task, workflow, workflow_reference
 from latch.resources.launch_plan import LaunchPlan
 from latch.resources.tasks import cached_large_task
 from latch.types import LatchDir, LatchFile
@@ -14,8 +14,7 @@ CACHE_VERSION = "0.1.0"
 
 @small_task
 def fastp(
-    read1: LatchFile,
-    read2: LatchFile,
+    read_dir: LatchDir,
     sample_name: str,
 ) -> LatchDir:
     """Adapter removal and read trimming with fastp"""
@@ -25,12 +24,15 @@ def fastp(
 
     output_prefix = f"{str(output_dir)}/{sample_name}"
 
+    read1 = f"{read_dir.local_path}/{sample_name}_1_filtered.fastq"
+    read2 = f"{read_dir.local_path}/{sample_name}_2_filtered.fastq"
+
     _fastp_cmd = [
         "/root/fastp",
         "--in1",
-        read1.local_path,
+        read1,
         "--in2",
-        read2.local_path,
+        read2,
         "--out1",
         f"{output_prefix}_1.trim.fastq.gz",
         "--out2",
@@ -106,6 +108,19 @@ def map_to_host(
     return LatchDir(str(output_dir), f"latch:///unhost_{sample_name}_unaligned")
 
 
+@workflow_reference(
+    name="HighComplexity",
+    version="0.4.0-3b621f",
+)
+def highcomplexity(
+    read1: LatchFile,
+    read2: LatchFile,
+    sample_name: str,
+    contaminants: Optional[LatchFile],
+) -> LatchDir:
+    ...
+
+
 @workflow(UNHOST_DOCS)
 def unhost(
     read1: LatchFile,
@@ -113,6 +128,7 @@ def unhost(
     host_genome: LatchFile,
     host_name: str = "host",
     sample_name: str = "unhost_sample",
+    contaminants: Optional[LatchFile] = None,
 ) -> LatchDir:
     """A Workflow for fastq preprocessing and host read removal
 
@@ -142,7 +158,10 @@ def unhost(
     Bioinformatics. bty648.
     """
 
-    trimmed_data = fastp(read1=read1, read2=read2, sample_name=sample_name)
+    complexity_filtered = highcomplexity(
+        read1=read1, read2=read2, sample_name=sample_name, contaminants=contaminants
+    )
+    trimmed_data = fastp(read_dir=complexity_filtered, sample_name=sample_name)
     host_idx = build_bowtie_index(
         host_genome=host_genome, sample_name=sample_name, host_name=host_name
     )
@@ -161,9 +180,11 @@ LaunchPlan(
     unhost,
     "Test Microbiome",
     {
-        "read1": LatchFile("latch:///Crohn/SRR579292_1.fastq"),
-        "read2": LatchFile("latch:///Crohn/SRR579292_2.fastq"),
-        "host_genome": LatchFile("latch:///ref_genome/Homo_sapiens.fa.gz"),
+        "read1": LatchFile("s3://latch-public/test-data/4318/SRR579292_1.fastq"),
+        "read2": LatchFile("s3://latch-public/test-data/4318/SRR579292_2.fastq"),
+        "host_genome": LatchFile(
+            "s3://latch-public/test-data/4318/Homo_sapiens.GRCh38.dna_rm.toplevel.fa.gz"
+        ),
         "host_name": "homo_sapiens",
         "sample_name": "example_microbiome",
     },

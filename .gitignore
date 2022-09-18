@@ -177,3 +177,5 @@ cython_debug/
 
 data/
 .latch_report.tar.gz
+.logs/
+cache.txt
